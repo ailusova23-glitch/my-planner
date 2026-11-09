@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Особистий Планувальник</title>
+  <meta name="theme-color" content="#090d16">
+  <style>
+    :root {
+      --bg-color: #090d16;
+      --card-bg: #111827;
+      --card-hover: #1f2937;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border: #1f2937;
+      --danger: #ef4444;
+      --prio-high: #b91c1c;
+      --prio-med: #b45309;
+      --prio-low: #047857;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 850px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    input, textarea, select, button {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: 1px solid var(--accent);
+      border-color: var(--accent);
+    }
+
+    .calendar-section {
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .calendar-header-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .cal-day {
+      background: var(--bg-color);
+      border: 1px solid var(--border);
+      padding: 10px 6px;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s, border-color 0.2s;
+      position: relative;
+    }
+
+    .cal-day:hover {
+      background: var(--card-hover);
+      border-color: var(--accent);
+    }
+
+    .cal-day.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .cal-day.has-tasks::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      background-color: var(--text-main);
+      border-radius: 50%;
+    }
+
+    .editor-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .form-row input, .form-row select {
+      flex: 1;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .editor-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    button.primary-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 10px 20px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    button.primary-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    button.secondary-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button.secondary-btn:hover {
+      background: var(--card-hover);
+      color: var(--text-main);
+    }
+
+    .notes-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+    }
+
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .note-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 14px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-left: 4px solid var(--border);
+    }
+
+    .note-card.prio-high { border-left-color: var(--prio-high); }
+    .note-card.prio-med { border-left-color: var(--prio-med); }
+    .note-card.prio-low { border-left-color: var(--prio-low); }
+
+    .note-card.completed {
+      opacity: 0.4;
+      text-decoration: line-through;
+    }
+
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .note-title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .note-meta {
+      display: flex;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .note-body {
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      color: var(--text-muted);
+    }
+
+    .note-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    .delete-btn {
+      background: transparent;
+      color: var(--danger);
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 4px 8px;
+    }
+
+    .filter-check {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>🌑 Особистий Планувальник</h1>
+    </header>
+
+    <section class="calendar-section">
+      <div class="calendar-header">
+        <h3 id="monthYearDisplay">Місяць Рік</h3>
+        <div class="calendar-header-controls">
+          <button class="secondary-btn" onclick="goToToday()">Сьогодні</button>
+          <button class="secondary-btn" onclick="changeMonth(-1)">‹</button>
+          <button class="secondary-btn" onclick="changeMonth(1)">›</button>
+        </div>
+      </div>
+      <div id="calendarGrid" class="calendar-grid"></div>
+    </section>
+
+    <section class="editor-section">
+      <input type="text" id="noteTitle" placeholder="Що треба зробити / Заголовок...">
+      <div class="form-row">
+        <input type="date" id="noteDate">
+        <input type="time" id="noteTime">
+        <select id="notePriority">
+          <option value="low">Низький пріоритет</option>
+          <option value="med" selected>Середній пріоритет</option>
+          <option value="high">Високий пріоритет</option>
+        </select>
+      </div>
+      <textarea id="noteBody" placeholder="Деталі, нотатки чи опис..."></textarea>
+      
+      <div class="editor-actions">
+        <input type="text" id="noteCategory" placeholder="#тег" style="max-width: 150px;">
+        <button class="primary-btn" onclick="saveNote()">Додати завдання</button>
+      </div>
+    </section>
+
+    <section class="notes-section">
+      <div class="section-header">
+        <div class="section-title" id="selectedDateTitle">Завдання на день:</div>
+        <label class="filter-check">
+          <input type="checkbox" id="hideCompleted" onchange="renderNotes()"> Сховати виконані
+        </label>
+      </div>
+      <div id="notesList" class="notes-list"></div>
+    </section>
+  </div>
+
+  <script>
+    let notes = JSON.parse(localStorage.getItem('my_notes')) || [];
+    let currentDate = new Date();
+    let selectedDateStr = formatDateKey(new Date());
+
+    function formatDateKey(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    document.getElementById('noteDate').value = selectedDateStr;
+
+    function saveNote() {
+      const title = document.getElementById('noteTitle').value.trim();
+      const body = document.getElementById('noteBody').value.trim();
+      const date = document.getElementById('noteDate').value || selectedDateStr;
+      const time = document.getElementById('noteTime').value;
+      const priority = document.getElementById('notePriority').value;
+      const category = document.getElementById('noteCategory').value.trim();
+
+      if (!title && !body) return alert('Введіть текст завдання');
+
+      const newNote = {
+        id: Date.now(),
+        title: title || 'Без назви',
+        body: body,
+        date: date,
+        time: time || '',
+        priority: priority,
+        category: category ? `#${category.replace(/^#/, '')}` : '',
+        completed: false
+      };
+
+      notes.unshift(newNote);
+      updateStorage();
+      clearForm();
+      
+      selectedDateStr = date;
+      currentDate = new Date(date);
+      renderAll();
+    }
+
+    function toggleTodo(id) {
+      notes = notes.map(n => n.id === id ? { ...n, completed: !n.completed } : n);
+      updateStorage();
+      renderAll();
+    }
+
+    function deleteNote(id) {
+      notes = notes.filter(n => n.id !== id);
+      updateStorage();
+      renderAll();
+    }
+
+    function updateStorage() {
+      localStorage.setItem('my_notes', JSON.stringify(notes));
+    }
+
+    function clearForm() {
+      document.getElementById('noteTitle').value = '';
+      document.getElementById('noteBody').value = '';
+      document.getElementById('noteTime').value = '';
+      document.getElementById('noteCategory').value = '';
+      document.getElementById('noteDate').value = selectedDateStr;
+    }
+
+    function changeMonth(direction) {
+      currentDate.setMonth(currentDate.getMonth() + direction);
+      renderCalendar();
+    }
+
+    function goToToday() {
+      const today = new Date();
+      currentDate = today;
+      selectedDateStr = formatDateKey(today);
+      document.getElementById('noteDate').value = selectedDateStr;
+      renderAll();
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendarGrid');
+      const monthYearDisplay = document.getElementById('monthYearDisplay');
+      grid.innerHTML = '';
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      const monthsNames = ['Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень', 'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'];
+      monthYearDisplay.textContent = `${monthsNames[month]} ${year}`;
+
+      const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
+      weekdays.forEach(wd => {
+        const headerEl = document.createElement('div');
+        headerEl.style.fontSize = '0.75rem';
+        headerEl.style.color = '#9ca3af';
+        headerEl.style.textAlign = 'center';
+        headerEl.style.paddingBottom = '4px';
+        headerEl.textContent = wd;
+        grid.appendChild(headerEl);
+      });
+
+      for (let i = 0; i < firstDayIndex; i++) {
+        const emptyDiv = document.createElement('div');
+        grid.appendChild(emptyDiv);
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dayDate = new Date(year, month, day);
+        const dateStr = formatDateKey(dayDate);
+        
+        const dayEl = document.createElement('div');
+        dayEl.className = 'cal-day';
+        dayEl.textContent = day;
+
+        if (dateStr === selectedDateStr) {
+          dayEl.classList.add('active');
+        }
+
+        const hasTasks = notes.some(n => n.date === dateStr && !n.completed);
+        if (hasTasks) {
+          dayEl.classList.add('has-tasks');
+        }
+
+        dayEl.onclick = () => {
+          selectedDateStr = dateStr;
+          document.getElementById('noteDate').value = dateStr;
+          renderAll();
+        };
+
+        grid.appendChild(dayEl);
+      }
+    }
+
+    function renderNotes() {
+      const list = document.getElementById('notesList');
+      const hideCompleted = document.getElementById('hideCompleted').checked;
+      document.getElementById('selectedDateTitle').textContent = `Завдання на ${selectedDateStr}:`;
+      list.innerHTML = '';
+
+      let dayNotes = notes.filter(n => n.date === selectedDateStr);
+
+      if (hideCompleted) {
+        dayNotes = dayNotes.filter(n => !n.completed);
+      }
+
+      const priorityWeight = { high: 3, med: 2, low: 1 };
+
+      dayNotes.sort((a, b) => {
+        if (a.time && b.time) {
+          return a.time.localeCompare(b.time);
+        }
+        if (a.time && !b.time) return -1;
+        if (!a.time && b.time) return 1;
+        
+        return priorityWeight[b.priority] - priorityWeight[a.priority];
+      });
+
+      if (dayNotes.length === 0) {
+        list.innerHTML = `<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 20px;">На цей день немає завдань</div>`;
+        return;
+      }
+
+      dayNotes.forEach(note => {
+        const card = document.createElement('div');
+        card.className = `note-card prio-${note.priority} ${note.completed ? 'completed' : ''}`;
+        
+        const prioNames = { high: 'Високий', med: 'Середній', low: 'Низький' };
+
+        card.innerHTML = `
+          <div class="note-header">
+            <span class="note-title">${note.title}</span>
+            ${note.category ? `<span style="font-size:0.75rem; color: var(--accent);">${note.category}</span>` : ''}
+          </div>
+          ${note.body ? `<div class="note-body">${note.body}</div>` : ''}
+          <div class="note-footer">
+            <div class="note-meta">
+              ${note.time ? `<span>⏰ ${note.time}</span>` : ''}
+              <span>📌 ${prioNames[note.priority]}</span>
+            </div>
+            <div>
+              <input type="checkbox" ${note.completed ? 'checked' : ''} onchange="toggleTodo(${note.id})" style="cursor: pointer;">
+              <button class="delete-btn" onclick="deleteNote(${note.id})">Видалити</button>
+            </div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function renderAll() {
+      renderCalendar();
+      renderNotes();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
