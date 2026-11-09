@@ -49,10 +49,27 @@
       gap: 20px;
     }
 
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
     header h1 {
       font-size: 1.5rem;
       color: var(--text-main);
       font-weight: 600;
+    }
+
+    /* Кнопка підказки для встановлення на мобільному */
+    .install-hint-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--accent);
+      color: var(--text-main);
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
     input, textarea, select, button {
@@ -283,12 +300,41 @@
       gap: 6px;
       cursor: pointer;
     }
+
+    /* Модальне вікно інструкції для телефону */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 320px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-content p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
   <div class="app-container">
     <header>
-      <h1>🌑 Особистий Планувальник</h1>
+      <h1>🌑 Планувальник</h1>
+      <button class="install-hint-btn" onclick="showInstallHint()">📲 Як додати на екран</button>
     </header>
 
     <section class="calendar-section">
@@ -333,7 +379,27 @@
     </section>
   </div>
 
+  <!-- Модальне вікно з інструкцією -->
+  <div id="installModal" class="modal" onclick="closeInstallHint(event)">
+    <div class="modal-content">
+      <h3 style="color:var(--text-main);">Встановлення на телефон</h3>
+      <p>Щоб іконка з'явилася на головному екрані телефону:<br><br>
+      <b>Android (Chrome):</b> натисніть на 3 крапки угорі праворуч ➡️ <b>«Додати на головний екран»</b> або «Встановити додаток».<br><br>
+      <b>iPhone (Safari):</b> натисніть кнопку «Поділитися» (квадрат зі стрілкою) внизу ➡️ <b>«На початковий екран»</b>.</p>
+      <button class="primary-btn" onclick="closeInstallHint(true)">Зрозуміло</button>
+    </div>
+  </div>
+
   <script>
+    function showInstallHint() {
+      document.getElementById('installModal').style.display = 'flex';
+    }
+    function closeInstallHint(e) {
+      if (e === true || e.target.id === 'installModal') {
+        document.getElementById('installModal').style.display = 'none';
+      }
+    }
+
     let notes = JSON.parse(localStorage.getItem('my_notes')) || [];
     let currentDate = new Date();
     let selectedDateStr = formatDateKey(new Date());
@@ -533,11 +599,6 @@
     }
 
     renderAll();
-
-    // Реєстрація Service Worker для розпізнавання додатка браузером
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration skipped', err));
-    }
   </script>
 </body>
 </html>
